@@ -1,0 +1,81 @@
+D:\code\python_3.12\python.exe "C:\Users\Daniel ZHAO\AIBA\Project_test\pythonProject1\llmtolllm\run_tests.py" 
+Debug: All Test Names in Suite
+Total Loaded Tests: 0
+
+Test Results
+
+Failed Tests:
+No failures.
+
+Passed Tests:
+Test: test_median_not_midpoint_case2
+Category: Category 3: Incorrect handling of cases where the median is not at the midpoint of either array
+Status: Passed
+
+Test: test_median_not_midpoint_case3
+Category: Category 3: Incorrect handling of cases where the median is not at the midpoint of either array
+Status: Passed
+
+Test: test_odd_total_length_case4
+Category: Category 4: Incorrect calculation of the median when the total length of the arrays is odd
+Status: Passed
+
+Test: test_odd_total_length_case2
+Category: Category 4: Incorrect calculation of the median when the total length of the arrays is odd
+Status: Passed
+
+Test: test_odd_total_length_case3
+Category: Category 4: Incorrect calculation of the median when the total length of the arrays is odd
+Status: Passed
+
+Test: test_empty_array_case4
+Category: Category 1: Incorrect handling of edge cases when one of the arrays is empty
+Status: Passed
+
+Test: test_odd_total_length_case1
+Category: Category 4: Incorrect calculation of the median when the total length of the arrays is odd
+Status: Passed
+
+Test: test_even_total_length_case1
+Category: Category 2: Incorrect calculation of the median when the total length of the arrays is even
+Status: Passed
+
+Test: test_even_total_length_case4
+Category: Category 2: Incorrect calculation of the median when the total length of the arrays is even
+Status: Passed
+
+Test: test_median_not_midpoint_case4
+Category: Category 3: Incorrect handling of cases where the median is not at the midpoint of either array
+Status: Passed
+
+Test: test_empty_array_case1
+Category: Category 1: Incorrect handling of edge cases when one of the arrays is empty
+Status: Passed
+
+Test: test_even_total_length_case2
+Category: Category 2: Incorrect calculation of the median when the total length of the arrays is even
+Status: Passed
+
+Test: test_empty_array_case2
+Category: Category 1: Incorrect handling of edge cases when one of the arrays is empty
+Status: Passed
+
+Test: test_even_total_length_case3
+Category: Category 2: Incorrect calculation of the median when the total length of the arrays is even
+Status: Passed
+
+Test: test_empty_array_case3
+Category: Category 1: Incorrect handling of edge cases when one of the arrays is empty
+Status: Passed
+
+Test: test_median_not_midpoint_case1
+Category: Category 3: Incorrect handling of cases where the median is not at the midpoint of either array
+Status: Passed
+
+Summary
+Total Tests: 16
+Passed: 16
+Failed: 0
+Total Reported: 16
+
+进程已结束，退出代码为 0
