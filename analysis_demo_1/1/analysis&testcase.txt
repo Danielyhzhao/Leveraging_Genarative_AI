@@ -1,0 +1,25 @@
+Analysis Result:
+【Logical Errors】
+1. The ternary operator's order of operations may be incorrect, leading to incorrect element comparisons. - Approximate region: Code block with ternary operations in both conditions where sum is odd and even.
+2. The code may incorrectly compute the median when both arrays have even length. - Approximate region: The block where (len1 + len2) is even and both len1 and len2 are even.
+3. The code might not correctly handle cases where the sum of m and n is 1. - Approximate region: The conditional logic when sum is odd.
+4. The code may fail to consider when len1 or len2 is zero. - Approximate region: The conditional logic for when len1 or len2 is zero.
+
+【Test Cases】
+Input: [], [1,3]
+Expected: 2.0
+
+Input: [1,2], [3,4,5,6,7,8,9,10]
+Expected: 4.5
+
+Input: [0,5,7], [0,3,5,9]
+Expected: 4.0
+
+Input: [-1], [0]
+Expected: -0.5
+
+
+一个point要生成2-3个test case，test case要分类对应每一个问题
+试两个不同的llm，使用同一种方法
+需要查看llm生成的逻辑错误是否正确
+试多几条问题看是否合适

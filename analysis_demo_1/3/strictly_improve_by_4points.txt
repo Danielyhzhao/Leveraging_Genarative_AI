@@ -1,0 +1,52 @@
+from typing import List
+
+
+class Solution:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+        # Handle cases where one of the arrays is empty
+        if not nums1 and not nums2:
+            return 0.0
+        if not nums1:
+            n = len(nums2)
+            if n % 2 == 1:
+                return nums2[n // 2]
+            else:
+                return (nums2[(n - 1) // 2] + nums2[n // 2]) / 2.0
+        if not nums2:
+            return self.findMedianSortedArrays(nums2, nums1)  # Reuse the logic by swapping
+
+        m, n = len(nums1), len(nums2)
+        if m > n:
+            return self.findMedianSortedArrays(nums2, nums1)  # Ensure nums1 is the shorter array
+
+        low, high = 0, m
+        total = m + n
+        half = (total + 1) // 2  # Number of elements needed in the left partition
+
+        while low <= high:
+            i = (low + high) // 2  # Partition point for nums1
+            j = half - i  # Partition point for nums2
+
+            # Handle edge cases where partitions are at the boundaries
+            max_left1 = nums1[i - 1] if i > 0 else -float('inf')
+            max_left2 = nums2[j - 1] if j > 0 else -float('inf')
+            min_right1 = nums1[i] if i < m else float('inf')
+            min_right2 = nums2[j] if j < n else float('inf')
+
+            max_left = max(max_left1, max_left2)
+            min_right = min(min_right1, min_right2)
+
+            if max_left <= min_right:
+                # Correct partition found
+                if total % 2 == 1:
+                    return max_left
+                else:
+                    return (max_left + min_right) / 2.0
+            else:
+                # Adjust the binary search bounds
+                if max_left1 > min_right2:
+                    high = i - 1  # Move partition in nums1 to the left
+                else:
+                    low = i + 1  # Move partition in nums1 to the right
+
+        return 0.0  # This return is a placeholder and should never be reached

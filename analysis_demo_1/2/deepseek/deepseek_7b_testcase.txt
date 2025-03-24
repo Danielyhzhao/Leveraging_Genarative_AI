@@ -1,0 +1,92 @@
+=== Debug: All Test Names in Suite ===
+Total Loaded Tests: 0
+
+=== Test Results ===
+
+Failed Tests:
+Test: test_uneven_length_case1
+Category: Category 4: Incorrect handling of cases where one array is longer than the other
+Status: Failed
+Logical Error Type: Incorrect handling of cases where one array is longer than the other
+Error Details: AssertionError: 2 != 3.5
+
+Test: test_uneven_length_case2
+Category: Category 4: Incorrect handling of cases where one array is longer than the other
+Status: Failed
+Logical Error Type: Incorrect handling of cases where one array is longer than the other
+Error Details: AssertionError: 2 != 3.5
+
+Test: test_uneven_length_case3
+Category: Category 4: Incorrect handling of cases where one array is longer than the other
+Status: Failed
+Logical Error Type: Incorrect handling of cases where one array is longer than the other
+Error Details: AssertionError: 4.5 != 4.0
+
+Test: test_uneven_length_case4
+Category: Category 4: Incorrect handling of cases where one array is longer than the other
+Status: Failed
+Logical Error Type: Incorrect handling of cases where one array is longer than the other
+Error Details: AssertionError: 5.0 != 4.0
+
+Test: test_empty_array_case1
+Category: Category 3: No handling of empty arrays leading to index errors
+Status: Failed
+Logical Error Type: No handling of empty arrays leading to index errors
+Error Details: IndexError: list index out of range
+
+Test: test_empty_array_case2
+Category: Category 3: No handling of empty arrays leading to index errors
+Status: Failed
+Logical Error Type: No handling of empty arrays leading to index errors
+Error Details: IndexError: list index out of range
+
+Test: test_empty_array_case3
+Category: Category 3: No handling of empty arrays leading to index errors
+Status: Failed
+Logical Error Type: No handling of empty arrays leading to index errors
+Error Details: IndexError: list index out of range
+
+Test: test_empty_array_case4
+Category: Category 3: No handling of empty arrays leading to index errors
+Status: Failed
+Logical Error Type: No handling of empty arrays leading to index errors
+Error Details: IndexError: list index out of range
+
+Passed Tests:
+Test: test_odd_both_arrays_case3
+Category: Category 1: Incorrect handling of the median selection when both arrays have odd lengths
+Status: Passed
+
+Test: test_even_both_arrays_case4
+Category: Category 2: Incorrect handling of the median selection when both arrays have even lengths
+Status: Passed
+
+Test: test_even_both_arrays_case1
+Category: Category 2: Incorrect handling of the median selection when both arrays have even lengths
+Status: Passed
+
+Test: test_odd_both_arrays_case4
+Category: Category 1: Incorrect handling of the median selection when both arrays have odd lengths
+Status: Passed
+
+Test: test_even_both_arrays_case2
+Category: Category 2: Incorrect handling of the median selection when both arrays have even lengths
+Status: Passed
+
+Test: test_odd_both_arrays_case2
+Category: Category 1: Incorrect handling of the median selection when both arrays have odd lengths
+Status: Passed
+
+Test: test_odd_both_arrays_case1
+Category: Category 1: Incorrect handling of the median selection when both arrays have odd lengths
+Status: Passed
+
+Test: test_even_both_arrays_case3
+Category: Category 2: Incorrect handling of the median selection when both arrays have even lengths
+Status: Passed
+
+=== Summary ===
+Total Tests: 16
+Passed: 8
+Failed: 8
+Total Reported: 16
