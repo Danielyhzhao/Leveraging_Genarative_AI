@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual-LLM 代码辅导系统 · 可视化工作台</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --panel:#ffffff; --ink:#1f2937; --muted:#6b7280;
+    --line:#e5e7eb; --accent:#4f46e5; --accent-soft:#eef2ff;
+    --ok:#16a34a; --ok-soft:#ecfdf5; --bad:#dc2626; --bad-soft:#fef2f2;
+    --warn:#d97706; --warn-soft:#fffbeb; --shadow:0 1px 3px rgba(16,24,40,.08),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;font-size:14px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--panel);
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  header .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+  .badge.offline{background:var(--warn-soft);color:var(--warn)}
+  .badge.api{background:var(--accent-soft);color:var(--accent)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .wrap{display:grid;grid-template-columns:minmax(380px,1fr) minmax(440px,1.25fr);gap:20px;padding:20px;max-width:1500px;margin:0 auto}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 12px}
+  label{display:block;font-weight:600;margin:12px 0 6px;font-size:13px}
+  textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px;background:#fbfcfe;color:var(--ink);resize:vertical;line-height:1.5}
+  #code{min-height:300px;tab-size:4}
+  #problem{min-height:64px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  button{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;
+    padding:9px 16px;border-radius:10px;font-size:13px;transition:.15s}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.05);color:#fff}
+  button.ghost{background:transparent}
+  select{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .metric{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:12px}
+  .metric .k{font-size:12px;color:var(--muted)}
+  .metric .v{font-size:20px;font-weight:700;margin-top:2px}
+  .bar{height:8px;border-radius:99px;background:#eef0f4;overflow:hidden;margin-top:8px}
+  .bar > i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .5s}
+  .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:6px 0 14px}
+  .step{display:flex;align-items:center;gap:8px}
+  .node{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:96px}
+  .node .ring{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;border:2px solid var(--line);color:var(--muted);background:#fff}
+  .node .t{font-size:11px;color:var(--muted);text-align:center}
+  .node.ok .ring{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+  .node.bad .ring{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+  .node.act .ring{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .arrow{width:26px;height:2px;background:var(--line);position:relative;margin:0 2px}
+  .arrow::after{content:"";position:absolute;right:0;top:-3px;border:4px solid transparent;border-left-color:var(--line)}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;background:#fff;animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .card .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .card .head .it{font-weight:700}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .pill.pass{background:var(--ok-soft);color:var(--ok)}
+  .pill.fail{background:var(--bad-soft);color:var(--bad)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .block{margin-top:10px}
+  .block .lab{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;overflow:auto;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:0;white-space:pre-wrap;word-break:break-word;max-height:320px}
+  pre.light{background:#f8fafc;color:#0f172a;border:1px solid var(--line)}
+  .refl{border:1px dashed var(--accent);background:var(--accent-soft);border-radius:12px;padding:14px;margin-top:6px}
+  .refl textarea{min-height:70px;background:#fff}
+  .empty{color:var(--muted);text-align:center;padding:40px 10px}
+  .spinner{width:16px;height:16px;border:2px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .legend{font-size:11px;color:var(--muted);margin-top:4px}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:600;margin-left:6px}
+  .timing{font-size:12px;color:var(--muted);margin:4px 0 8px;font-variant-numeric:tabular-nums}
+  .timing b{color:var(--accent)}
+  .traceWrap{margin-top:8px}
+  .traceWrap h4{font-size:12px;margin:10px 0 4px;color:var(--muted)}
+  .traceBtn{margin-top:8px;font-size:12px;padding:6px 12px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🧠 Dual-LLM 代码辅导系统</h1>
+    <div class="sub">LLM-1 分析代码并生成测试 · 确定性执行验证 · 失败触发 LLM-2 给出建议与反思</div>
+  </div>
+  <div id="backendBadge" class="badge offline"><span class="dot"></span><span id="backendText">offline</span></div>
+</header>
+
+<div class="wrap">
+  <!-- 左:输入 -->
+  <section class="panel">
+    <h2>输入区</h2>
+    <label for="problem">问题描述</label>
+    <textarea id="problem" placeholder="例如:LeetCode 72. Edit Distance ..."></textarea>
+
+    <label for="code">学生代码</label>
+    <textarea id="code" placeholder="在此粘贴学生提交的代码..." spellcheck="false"></textarea>
+
+    <div class="row">
+      <label style="margin:0">最大迭代</label>
+      <select id="maxIter">
+        <option value="3" selected>3</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+      <button class="primary" id="runBtn">▶ 运行 Pipeline</button>
+      <button class="ghost" id="sampleBtn">载入示例</button>
+      <button class="ghost" id="resetBtn">重置</button>
+    </div>
+    <div class="legend">模式由 <code>.env</code> 的 <code>DUAL_LLM_BACKEND</code> 决定:<b>api</b> 模式会真实调用两个 DeepSeek 模型(LLM-1 分析者 / LLM-2 对抗者),每次调用都有真实网络耗时,可在每轮卡片查看「耗时」与「API 调用详情」;<b>offline</b> 模式用本地规则引擎,瞬时完成、无需 key。</div>
+  </section>
+
+  <!-- 右:结果 -->
+  <section class="panel">
+    <h2>可视化结果</h2>
+    <div id="metrics" class="metrics" style="display:none">
+      <div class="metric">
+        <div class="k">初始通过率</div>
+        <div class="v" id="mInit">–</div>
+        <div class="bar"><i id="barInit" style="width:0%"></i></div>
+      </div>
+      <div class="metric">
+        <div class="k">最终通过率</div>
+        <div class="v" id="mFinal">–</div>
+        <div class="bar"><i id="barFinal" style="width:0%"></i></div>
+      </div>
+      <div class="metric">
+        <div class="k">改进幅度</div>
+        <div class="v" id="mImp">–</div>
+      </div>
+      <div class="metric">
+        <div class="k">难度</div>
+        <div class="v" id="mDiff" style="text-transform:capitalize">–</div>
+      </div>
+    </div>
+
+    <div id="history" style="margin-top:14px">
+      <div class="empty" id="emptyHint">运行后,这里会展示每一轮迭代的 Pipeline 流程与结果。</div>
+    </div>
+
+    <div id="reflPanel" class="refl" style="display:none">
+      <strong>🔁 需要你的反思才能继续下一轮</strong>
+      <div class="block">
+        <div class="lab">你的反思(针对建议)</div>
+        <textarea id="reflection" placeholder="例如:我意识到空字符串的 DP 初始化可能没处理好..."></textarea>
+      </div>
+      <div class="block">
+        <div class="lab">修订后的代码(可选,留空则沿用原代码)</div>
+        <textarea id="revised" placeholder="在此粘贴修改后的代码,或直接沿用上方代码..."></textarea>
+      </div>
+      <div class="row">
+        <button class="primary" id="nextBtn">➡ 进入下一轮迭代</button>
+        <button class="ghost" id="stopBtn">结束</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let curCode = "", curDesc = "", curMax = 3, busy = false;
+let curMode = "offline";
+let runTimer = null;
+
+function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':s);return d.textContent;}
+function setBadge(mode){curMode=mode||'offline';const b=$('backendBadge');b.className='badge '+(mode==='api'?'api':'offline');$('backendText').textContent=mode||'offline';}
+
+function showBusy(on){
+  busy=on;
+  $('runBtn').disabled=on; $('nextBtn').disabled=on;
+  if(on){
+    const t0=Date.now();
+    const label = ()=> curMode==='api' ? '调用 DeepSeek API 中' : '运行中';
+    $('runBtn').innerHTML = `<span class="spinner"></span>${label()}... 0.0s`;
+    runTimer=setInterval(()=>{ const s=((Date.now()-t0)/1000).toFixed(1); $('runBtn').innerHTML=`<span class="spinner"></span>${label()}... ${s}s`; },100);
+  }else{
+    if(runTimer){clearInterval(runTimer);runTimer=null;}
+    $('runBtn').innerHTML='▶ 运行 Pipeline';
+  }
+}
+
+async function callRun(reflection){
+  showBusy(true);
+  try{
+    const resp = await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:curCode, problem_desc:curDesc, student_reflection:reflection||'', max_iterations:curMax})});
+    const data = await resp.json();
+    setBadge(data.backend_mode);
+    renderResult(data);
+  }catch(e){
+    alert('请求失败: '+e.message);
+  }finally{ showBusy(false); }
+}
+
+function renderResult(data){
+  $('metrics').style.display='grid';
+  const m = data.metrics||{};
+  const init = Math.round((m.initial_pass_rate||0)*100);
+  const fin  = Math.round((m.final_pass_rate||0)*100);
+  const imp  = Math.round((m.improvement||0)*100);
+  $('mInit').textContent = init+'%'; $('barInit').style.width=init+'%';
+  $('mFinal').textContent = fin+'%'; $('barFinal').style.width=fin+'%';
+  $('mImp').textContent = (imp>0?'+':'')+imp+'%'; $('mImp').style.color = imp>0?'var(--ok)':(imp<0?'var(--bad)':'var(--ink)');
+  $('mDiff').textContent = m.difficulty||'–';
+
+  const hist = data.history||[];
+  $('emptyHint').style.display='none';
+
+  // 结果摘要:无论成功/失败都展示 final;若 history 为空(如 LLM-1 调用失败)这尤其重要
+  const finalMsg = data.final || '';
+  const isErr = /失败|错误|Error|不足|invalid|401|402|403|unable/i.test(finalMsg);
+  const summary = document.createElement('div');
+  summary.className = 'card';
+  summary.innerHTML = `<div class="head"><span class="it">📋 结果摘要</span>
+      <span class="pill ${isErr?'fail':'pass'}">${isErr?'运行异常':'运行完成'}</span></div>
+      <div class="block"><div class="lab">最终状态</div>
+      <pre class="${isErr?'':''}" style="color:${isErr?'var(--bad)':'var(--ok)'};font-weight:500">${esc(finalMsg)}</pre></div>`;
+  $('history').appendChild(summary);
+
+  if(hist.length){
+    hist.forEach((h,i)=>appendRound(h, i+1));
+  }
+  // 反思面板
+  if(data.reflection_required){
+    $('reflPanel').style.display='block';
+    $('reflection').value=''; $('revised').value='';
+  }else{
+    $('reflPanel').style.display='none';
+  }
+}
+
+function flowNodes(h){
+  const passed = /Passed:\s*\d+,\s*Failed:\s*0/.test(h.test_result||'') && !h.syntax_error;
+  const hasSyntaxErr = !!h.syntax_error;
+  const hasSugg = !!h.suggestions;
+  return [
+    {t:'语法检查', cls: hasSyntaxErr?'bad':'ok', s: hasSyntaxErr?'✕':'✓'},
+    {t:'LLM-1 分析', cls:'ok', s:'✓'},
+    {t:'测试执行', cls: hasSyntaxErr?'act':(passed?'ok':'bad'), s: hasSyntaxErr?'·':(passed?'✓':'✕')},
+    {t:'LLM-2 建议', cls: hasSugg?'act':'', s: hasSugg?'?':'·'},
+  ];
+}
+
+function fmtMs(ms){ if(ms==null) return '–'; return ms<1000 ? Math.round(ms)+' ms' : (ms/1000).toFixed(2)+' s'; }
+
+function callTrace(call){
+  if(!call) return '';
+  return `<div class="block"><div class="lab">${esc(call.role)} · 模型 <b>${esc(call.model||'')}</b> · 耗时 ${fmtMs(call.elapsed_ms)}</div>
+      <div class="lab" style="margin-top:6px">发送给模型的 Prompt</div>
+      <pre class="light">${esc(call.prompt)}</pre>
+      <div class="lab" style="margin-top:6px">模型返回</div>
+      <pre>${esc(call.response)}</pre></div>`;
+}
+
+function appendRound(h, n){
+  const card = document.createElement('div');
+  card.className='card';
+  const passed = /Passed:\s*\d+,\s*Failed:\s*0/.test(h.test_result||'') && !h.syntax_error;
+  const title = h.syntax_error ? '语法错误' : (passed?'全部测试通过':'测试未通过 · 已生成建议');
+
+  const flow = flowNodes(h).map(nd=>`
+    <div class="node ${nd.cls}"><div class="ring">${nd.s}</div><div class="t">${nd.t}</div></div>`).join('<span class="arrow"></span>');
+
+  // 耗时行:直观区分 api(慢,真实网络调用)与 offline(瞬时)
+  let timing = `⏱ LLM-1 调用 ${fmtMs(h.llm1_call && h.llm1_call.elapsed_ms)}`;
+  if(h.test_duration_ms!=null) timing += ` · 测试执行 ${fmtMs(h.test_duration_ms)}`;
+  if(h.llm2_call) timing += ` · LLM-2 调用 ${fmtMs(h.llm2_call.elapsed_ms)}`;
+
+  let html = `<div class="head"><span class="it">🔄 迭代 ${n}</span>
+      <span class="pill ${h.syntax_error?'fail':(passed?'pass':'warn')}">${title}</span></div>
+    <div class="flow">${flow}</div>
+    <div class="timing">${timing}</div>`;
+
+  if(h.syntax_error){
+    html += block('语法检查结果', h.syntax_error, true);
+  }else{
+    const ic = (h.issues||'').split('\n').filter(l=>l.trim().startsWith('-')).length;
+    html += block(`ISSUES · LLM-1 发现 ${ic} 个问题`, h.issues, false);
+    // 解析测试数字
+    const tm = (h.test_result||'').match(/Tests:\s*(\d+),\s*Passed:\s*(\d+),\s*Failed:\s*(\d+)/);
+    const tlabel = tm ? `测试执行结果 · 共 ${tm[1]} 个测试 / 通过 ${tm[2]} / 失败 ${tm[3]}` : '测试执行结果';
+    html += block(tlabel, h.test_result, true);
+  }
+  if(h.suggestions){ html += block('SUGGESTIONS · LLM-2 改进建议', h.suggestions, false); }
+  if(h.reflections){ html += block('REFLECTIONS · 反思引导', h.reflections, false); }
+
+  const hasTrace = h.llm1_call || h.llm2_call;
+  if(hasTrace){
+    html += `<button class="ghost traceBtn" data-n="${n}">🔍 查看 API 调用详情</button>
+      <div class="traceWrap" id="trace${n}" style="display:none">
+        ${h.llm1_call ? ('<h4>LLM-1 调用</h4>'+callTrace(h.llm1_call)) : ''}
+        ${h.llm2_call ? ('<h4>LLM-2 调用</h4>'+callTrace(h.llm2_call)) : ''}
+      </div>`;
+  }
+  card.innerHTML = html;
+  $('history').appendChild(card);
+}
+
+function block(lab, content, dark){
+  return `<div class="block"><div class="lab">${lab}</div>
+    <pre class="${dark?'':'light'}">${esc(content)}</pre></div>`;
+}
+
+function resetAll(){
+  $('history').innerHTML='<div class="empty" id="emptyHint">运行后,这里会展示每一轮迭代的 Pipeline 流程与结果。</div>';
+  $('metrics').style.display='none';
+  $('reflPanel').style.display='none';
+}
+
+// 事件
+$('runBtn').onclick = ()=>{
+  curCode = $('code').value; curDesc = $('problem').value; curMax = +$('maxIter').value;
+  if(!curCode.trim()){ alert('请先输入学生代码'); return; }
+  resetAll();
+  callRun('');
+};
+$('sampleBtn').onclick = async ()=>{
+  const r = await fetch('/api/sample'); const d = await r.json();
+  $('code').value=d.code; $('problem').value=d.problem_desc;
+};
+$('resetBtn').onclick = ()=>{ resetAll(); };
+$('nextBtn').onclick = ()=>{
+  const refl = $('reflection').value.trim();
+  const rev = $('revised').value.trim();
+  if(rev) curCode = rev;
+  curDesc = $('problem').value;
+  $('reflPanel').style.display='none';
+  callRun(refl);
+};
+$('stopBtn').onclick = ()=>{ $('reflPanel').style.display='none'; };
+
+// 展开/收起「API 调用详情」
+document.addEventListener('click', e=>{
+  const t = e.target;
+  if(t && t.classList && t.classList.contains('traceBtn')){
+    const id = 'trace'+t.getAttribute('data-n');
+    const el = $(id);
+    if(el){ el.style.display = el.style.display==='none' ? 'block' : 'none'; }
+  }
+});
+
+// 初始化:拉取后端配置 + 载入示例
+window.addEventListener('load', async ()=>{
+  try{
+    const c = await fetch('/api/config').then(r=>r.json());
+    const b = $('backendBadge');
+    if(c.backend_mode==='api'){
+      b.className='badge api';
+      const k1 = c.llm1_key_set ? 'LLM1·已连接✓' : 'LLM1·未配置⚠';
+      const k2 = c.llm2_key_set ? 'LLM2·已连接✓' : 'LLM2·未配置⚠';
+      $('backendText').textContent = `API · DeepSeek 对抗 [${k1} ⇄ ${k2}]`;
+    }else{
+      b.className='badge offline';
+      $('backendText').textContent='offline · 本地规则引擎';
+    }
+  }catch(e){}
+  try{ const r=await fetch('/api/sample'); const d=await r.json();
+    $('code').value=d.code; $('problem').value=d.problem_desc; }catch(e){}
+});
+</script>
+</body>
+</html>
